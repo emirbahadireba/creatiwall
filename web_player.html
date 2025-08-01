@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CreatiWall Web Player</title>
+<style>
+  body, html {
+    margin: 0; padding: 0; height: 100%; background: black; display: flex; justify-content: center; align-items: center; overflow: hidden;
+    font-family: Arial, sans-serif; color: white;
+  }
+  #player-container {
+    width: 100vw; height: 100vh; position: relative;
+    background-color: black;
+    display: flex; justify-content: center; align-items: center;
+  }
+  #media-img, #media-video {
+    max-width: 100%; max-height: 100%; border-radius: 6px;
+    display: none;
+  }
+  #media-video {
+    background: black;
+  }
+  #loading {
+    position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+    font-size: 18px; color: #ff7e29;
+  }
+  #deviceIdModal {
+    position: fixed;
+    top:0; left:0; right:0; bottom:0;
+    background: rgba(0,0,0,0.8);
+    display: flex; justify-content: center; align-items: center;
+    z-index: 10000;
+  }
+  #deviceIdModalContent {
+    background: #222; padding: 30px; border-radius: 10px; text-align: center; color: white;
+    width: 300px;
+  }
+  #deviceIdInput {
+    width: 100%; padding: 12px; margin-top: 10px; border-radius: 6px; border: none; font-size: 16px;
+  }
+  #deviceIdBtn {
+    margin-top: 20px; padding: 12px 24px; border: none; border-radius: 6px;
+    background-color: #ff7e29; color: white; font-weight: bold; font-size: 16px; cursor: pointer;
+  }
+  #deviceIdError {
+    color: #f44336; margin-top: 10px; min-height: 20px;
+  }
+</style>
+</head>
+<body>
+
+<div id="player-container">
+  <img id="media-img" alt="Media Image" />
+  <video id="media-video" muted playsinline></video>
+  <div id="loading">Yükleniyor...</div>
+</div>
+
+<!-- Device ID Modal -->
+<div id="deviceIdModal">
+  <div id="deviceIdModalContent">
+    <h2>Device ID Girin</h2>
+    <input type="text" id="deviceIdInput" placeholder="Device ID" autofocus />
+    <button id="deviceIdBtn">Başlat</button>
+    <div id="deviceIdError"></div>
+  </div>
+</div>
+
+<script>
+  let playlist = [];
+  let currentIndex = 0;
+  let timer = null;
+
+  const imgElement = document.getElementById('media-img');
+  const videoElement = document.getElementById('media-video');
+  const loadingElement = document.getElementById('loading');
+  const deviceIdModal = document.getElementById('deviceIdModal');
+  const deviceIdInput = document.getElementById('deviceIdInput');
+  const deviceIdBtn = document.getElementById('deviceIdBtn');
+  const deviceIdError = document.getElementById('deviceIdError');
+
+  function clearTimer() {
+    if (timer) {
+      clearTimeout(timer);
+      timer = null;
+    }
+  }
+
+  function showLoading(show) {
+    loadingElement.style.display = show ? 'block' : 'none';
+  }
+
+  async function fetchPlaylist(deviceId) {
+    showLoading(true);
+    try {
+      const response = await fetch(`https://creatiwall.com/api_get_playlist.php?device_id=${encodeURIComponent(deviceId)}`);
+      if (!response.ok) throw new Error('API yanıtı alınamadı');
+      const data = await response.json();
+      showLoading(false);
+      if (data.error) {
+        throw new Error(data.error);
+      }
+      return data.media || [];
+    } catch (e) {
+      showLoading(false);
+      throw e;
+    }
+  }
+
+  function playMedia() {
+    if (playlist.length === 0) {
+      loadingElement.textContent = "Playlist boş veya bulunamadı.";
+      loadingElement.style.display = "block";
+      imgElement.style.display = 'none';
+      videoElement.style.display = 'none';
+      return;
+    }
+    const media = playlist[currentIndex];
+    const fileUrl = `https://creatiwall.com/uploads/${media.filename}`;
+    clearTimer();
+
+    if (media.filetype.startsWith('image')) {
+      videoElement.pause();
+      videoElement.style.display = 'none';
+
+      imgElement.src = fileUrl;
+      imgElement.style.display = 'block';
+
+      timer = setTimeout(() => {
+        currentIndex = (currentIndex + 1) % playlist.length;
+        playMedia();
+      }, 5000);
+    } else if (media.filetype.startsWith('video')) {
+      imgElement.style.display = 'none';
+
+      videoElement.src = fileUrl;
+      videoElement.style.display = 'block';
+      videoElement.controls = false;  // Kontrolleri kaldır
+      videoElement.play();
+
+      videoElement.onended = () => {
+        currentIndex = (currentIndex + 1) % playlist.length;
+        playMedia();
+      };
+    } else {
+      alert("Desteklenmeyen medya türü: " + media.filetype);
+      currentIndex = (currentIndex + 1) % playlist.length;
+      playMedia();
+    }
+  }
+
+  async function startPlayer(deviceId) {
+    try {
+      playlist = await fetchPlaylist(deviceId);
+      currentIndex = 0;
+      playMedia();
+      deviceIdModal.style.display = 'none';
+    } catch(e) {
+      deviceIdError.textContent = "Geçersiz Device ID veya API hatası.";
+    }
+  }
+
+  deviceIdBtn.addEventListener('click', () => {
+    const val = deviceIdInput.value.trim();
+    if (val.length === 0) {
+      deviceIdError.textContent = "Lütfen Device ID giriniz.";
+      return;
+    }
+    deviceIdError.textContent = "";
+    startPlayer(val);
+  });
+
+  deviceIdInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      deviceIdBtn.click();
+    }
+  });
+
+  // Focus input on load
+  window.onload = () => {
+    deviceIdInput.focus();
+  };
+</script>
+
+</body>
+</html>

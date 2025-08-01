@@ -1,0 +1,102 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f8fafc;
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.sidebar {
+    width: 220px;
+    background-color: #f7f8fa;
+    height: 100vh;
+    position: fixed;
+    padding: 20px;
+    top: 0;
+    left: 0;
+    border-right: 1px solid #ddd;
+    box-sizing: border-box;
+    overflow-y: auto;
+    z-index: 1000; /* Menü hep üstte */
+}
+
+.sidebar .logo {
+    font-weight: bold;
+    font-size: 1.5em;
+    margin-bottom: 20px;
+    color: #e67e22;
+}
+
+.sidebar ul {
+    list-style: none;
+    padding: 0;
+}
+
+.sidebar ul li {
+    margin-bottom: 10px;
+}
+
+.sidebar ul li a {
+    text-decoration: none;
+    color: #333;
+    padding: 8px 12px;
+    display: block;
+    border-radius: 4px;
+    border-left: 3px solid transparent;
+}
+
+.sidebar ul li a.active,
+.sidebar ul li a:hover {
+    background-color: #e67e22;
+    color: white;
+    border-left-color: #e67e22;
+}
+
+.main-content {
+    margin-left: 220px; /* Sidebar genişliği kadar boşluk */
+    width: calc(100% - 220px); /* Sağ kalan alan */
+    padding: 40px 32px;
+    overflow-y: auto;
+    height: 100vh;
+    box-sizing: border-box;
+    background-color: #fff;
+    position: relative;
+    z-index: 1;
+}
+
+.login-container {
+    width: 350px;
+    margin: 80px auto;
+    padding: 40px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px #eee;
+}
+
+.login-container h2 {
+    margin-top: 0;
+}
+
+.login-container input[type="email"],
+.login-container input[type="password"] {
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+}
+
+.login-container button {
+    width: 100%;
+    padding: 12px;
+    background: #ff7e29;
+    border: none;
+    color: #fff;
+    font-size: 16px;
+    border-radius: 6px;
+}
+
+.hata {
+    color: #c00;
+}
